@@ -63,6 +63,7 @@ def read_odds(odds_file="nba_odds_2018-19.xlsx"):
     return MasterTable
     #return MasterTable
 
+
 def get_game_odds():
     odds_table = read_odds()
 
@@ -82,7 +83,9 @@ def get_stats(team_stats_file="18_19_team_stats.csv", opp_stats_file='18_19_oppo
 
     return TeamStats
 
+
 def merge_normalize_Stats_Odds(odds, TeamStats):
+    pd.set_option('display.max_rows', None)
     Master = pd.merge(odds, TeamStats, how='left', left_on='Visitor', right_on='Team')
     Master2 = pd.merge(Master, TeamStats, how = 'left', left_on='Home', right_on='Team')
     Master2.columns = ['game_number', 'Date', 'Visitor', 'Final_Visitor', 'Home', 'Final_Home',
@@ -115,26 +118,8 @@ def merge_normalize_Stats_Odds(odds, TeamStats):
 
     return Master2
 
-    # TeamStats = Tstat[['Team', 'FG%', '3P%', 'FT%', 'FTA', 'ORB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PTS']].copy()
-    # TeamStats.set_index('Team')
-    # scalar = MinMaxScaler()
-    # TeamStats[['FG%', '3P%', 'FT%', 'FTA', 'ORB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PTS']] = scalar.fit_transform(
-    #     TeamStats[['FG%', '3P%', 'FT%', 'FTA', 'ORB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PTS']])
 
-    # TOstat = pd.read_csv(opp_stats_file, index_col=0)
-    # print(Ostat.columns)
-    # OppStats = Ostat[['Team', 'FG%', '3P%', 'FT%', 'FTA', 'ORB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PTS']].copy()
-    # OppStats.set_index('Team')
-    # scalar = MinMaxScaler()
-    # OppStats[['FG%', '3P%', 'FT%', 'FTA', 'ORB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PTS']] = scalar.fit_transform(
-    #     OppStats[['FG%', '3P%', 'FT%', 'FTA', 'ORB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PTS']])
-
-    # MasterTable = TeamStats.join(OppStats, lsuffix="_team", rsuffix="_opp")
-    # print(MasterTable.columns)
-    # MasterTable.to_excel("output.xlsx")
-
-    # return MasterTable
-def trainTestOneYear(data):
+def trainTest(data):
     features = data[['OverUnder', 'FG%_V', '3P%_V', 'FT%_V', 'FTA_V', 'ORB_V',
        'TRB_V', 'AST_V', 'STL_V', 'BLK_V', 'TOV_V', 'PTS_V', 'OFG%_V',
        'O3P%_V','OORB_V', 'OTRB_V',
@@ -143,7 +128,7 @@ def trainTestOneYear(data):
        'OFG%_H', 'O3P%_H', 'OORB_H', 'OTRB_H', 'OTOV_H', 'OPTS_H']].copy()
     labels = data['OUresult']
     X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.20)
-    classifier = KNeighborsClassifier(n_neighbors=5)
+    classifier = KNeighborsClassifier(n_neighbors=10)
     classifier.fit(X_train, y_train)
     y_pred = classifier.predict(X_test)
     print("confusion_matrix: \n")
@@ -152,7 +137,29 @@ def trainTestOneYear(data):
     return classification_report(y_test, y_pred)
 
 
-print(trainTestOneYear(merge_normalize_Stats_Odds(read_odds(), get_stats())))
 
+
+odds17 = read_odds(odds_file="nba_odds_2017-18.xlsx")
+odds18 = read_odds(odds_file="nba_odds_2018-19.xlsx")
+odds19 = read_odds(odds_file="nba_odds_2019-20.xlsx")
+
+
+stats17 = get_stats(team_stats_file="17TS.csv", opp_stats_file='17OPP.csv')
+stats18 = get_stats(team_stats_file="18_19_team_stats.csv", opp_stats_file='18_19_opponent_stats.csv')
+stats19 = get_stats(team_stats_file="19TS.csv", opp_stats_file='19OPP.csv')
+
+
+data17 = merge_normalize_Stats_Odds(odds17, stats17)
+data18 = merge_normalize_Stats_Odds(odds18, stats18)
+data19 = merge_normalize_Stats_Odds(odds19, stats19)
+
+
+def concatYears(data1, data2, data3):
+    con1 = pd.concat([data1, data2])
+    con2 = pd.concat([con1, data3])
+    con2.to_excel("output.xlsx")
+    return con2
+
+print(trainTest(concatYears(data17, data18, data19)))
 
 
