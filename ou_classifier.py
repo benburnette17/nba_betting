@@ -46,7 +46,7 @@ class OU_predictor():
         if model_type == "custom":
             self.num_neighbors = model_param
             self.threshhold = self.num_neighbors // 2 #use this to decide how much greater the count of O needs to be than U for us to feel sure about the classification,  or vice versa
-            self.set_up_custom
+            self.set_up_custom()
 
     def get_split(self):
         features = self.game_team_data[['OverUnder', 'FG%_V', '3P%_V', 'FT%_V', 'FTA_V', 'ORB_V',
@@ -66,12 +66,12 @@ class OU_predictor():
                             #returns a dictionary of where the keys are indices of the points, and the values are the classification for those points.
         OU_classifications = {}
         distances, indices = self.model.kneighbors(points)
-        for i in range(indices):
+        for i in range(len(indices)):
             o_count = 0
             u_count = 0
             for neighbor in indices[i]:
-                if self.y_train == "O":
-                    o_count +=1
+                if self.y_train[neighbor] == "O":
+                    o_count += 1
                 else:
                     u_count += 1
             if o_count - self.threshhold > u_count:
@@ -87,7 +87,7 @@ class OU_predictor():
     def set_up_custom(self):
         self.get_split()
         self.model = NearestNeighbors(n_neighbors=self.num_neighbors, algorithm="ball_tree").fit(self.X_train)
-        answer_dict = self. getNN(self.X_test)
+        self.answer_dict = self. getNN(self.X_test)
 
     def set_up_radius(self):
         self.classifier = RadiusNeighborsClassifier(radius=self.radius)
