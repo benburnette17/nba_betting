@@ -13,6 +13,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.feature_selection import RFE
 from sklearn.svm import SVR
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import RadiusNeighborsClassifier
 import numpy as np
 import math
 from sklearn.metrics import classification_report, confusion_matrix
@@ -128,7 +129,8 @@ def trainTest(data):
        'OFG%_H', 'O3P%_H', 'OORB_H', 'OTRB_H', 'OTOV_H', 'OPTS_H']].copy()
     labels = data['OUresult']
     X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.20)
-    classifier = KNeighborsClassifier(n_neighbors=10)
+    #classifier = RadiusNeighborsClassifier(radius=1.6)
+    classifier = KNeighborsClassifier(n_neighbors=8)
     classifier.fit(X_train, y_train)
     y_pred = classifier.predict(X_test)
     print("confusion_matrix: \n")
@@ -160,6 +162,8 @@ def concatYears(data1, data2, data3):
     con2.to_excel("output.xlsx")
     return con2
 
-print(trainTest(concatYears(data17, data18, data19)))
+#print(trainTest(concatYears(data17, data18, data19)))
 
 
+def runTest():
+    print(trainTest(concatYears(data17, data18, data19)))
