@@ -16,7 +16,7 @@ import gambling
 from statistics import mean
 
 class OU_predictor():
-    def __init__(self, model_param = 5, model_type = "knn", distThresh = 0.9):
+    def __init__(self, model_param = 5, model_type = "knn", ratThresh = 0.7):
         odds17 = gambling.read_odds(odds_file="nba_odds_2017-18.xlsx")
         odds18 = gambling.read_odds(odds_file="nba_odds_2018-19.xlsx")
         odds19 = gambling.read_odds(odds_file="nba_odds_2019-20.xlsx")
@@ -47,7 +47,7 @@ class OU_predictor():
 
         if model_type == "custom":
             self.num_neighbors = model_param
-            self.threshhold = 0.7 #use this to decide how much greater the count of O needs to be than U for us to feel sure about the classification,  or vice versa
+            # self.threshhold = ratThresh #use this to decide how much greater the count of O needs to be than U for us to feel sure about the classification,  or vice versa
 
 
 
@@ -67,9 +67,6 @@ class OU_predictor():
         self.X_test.reset_index(drop=True, inplace=True)
         self.y_test.reset_index(drop=True, inplace=True)
         self.y_train.reset_index(drop=True, inplace=True)
-
-
-
 
 
 
@@ -102,7 +99,7 @@ class OU_predictor():
         return OU_classifications
 
 
-    def getNN_dist(self, points, distThresh = 0.75): #takes in a set of points. Gets the nearest neighbors for each point, and the classifies based on those neighbors and a threshold.
+    def getNN_dist(self, points, distThresh): #takes in a set of points. Gets the nearest neighbors for each point, and the classifies based on those neighbors and a threshold.
                             #returns a dictionary of where the keys are indices of the points, and the values are the classification for those points.
         OU_classifications = {}
         distances, indices = self.model.kneighbors(points)
@@ -134,16 +131,14 @@ class OU_predictor():
         return OU_classifications
 
 
-
-
-
-    def set_up_custom(self, model_type):
+    def set_up_custom(self, model_type, distThresh = 0.75, ratThresh = 0.7):
         self.get_split()
         self.model = NearestNeighbors(n_neighbors=self.num_neighbors, algorithm="ball_tree").fit(self.X_train)
         if model_type == 'custom_1':
+            self.threshhold = ratThresh
             self.answer_dict = self. getNN(self.X_test)
         elif model_type == 'custom_2':
-            self.answer_dict = self. getNN_dist(self.X_test)
+            self.answer_dict = self. getNN_dist(self.X_test, distThresh)
         # print(self.answer_dict)
         LetsGo = 0
         Shucks = 0
@@ -155,8 +150,9 @@ class OU_predictor():
                 LetsGo += 1
             elif self.answer_dict[gameDex] != self.y_test[gameDex]:
                 Shucks += 1
+        if LetsGo+Shucks == 0:
+            return 100000000000000000
         return LetsGo/(LetsGo+Shucks)
-
 
 
 
@@ -189,3 +185,25 @@ class OU_predictor():
         for x in range(trials):
             lst.append(self.set_up_custom(model_type))
         return mean(lst)
+
+    def testExplore_dist(self, trials = 10):
+        dict = {}
+        dist = 1.2
+        for x in range(trials):
+            tempLst = []
+            for y in range(25):
+                tempLst.append(self.set_up_custom('custom_2', distThresh = dist))
+            dict[round(dist, 2)] = round(mean(tempLst), 2)
+            dist = dist - 0.1
+        return dict
+
+    def testExplore_rat(self, trials = 5):
+        dict = {}
+        rat = 0.5
+        for x in range(trials):
+            tempLst = []
+            for y in range(20):
+                tempLst.append(self.set_up_custom('custom_1', ratThresh = rat))
+            dict[round(rat, 2)] = round(mean(tempLst), 2)
+            rat = rat + 0.1
+        return dict
