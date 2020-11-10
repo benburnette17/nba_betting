@@ -184,7 +184,7 @@ class OU_predictor():
             elif self.answer_dict[gameDex] != self.y_test[gameDex]:
                 Shucks += 1
         if LetsGo+Shucks == 0:
-            return 100000000000000000
+            return [100000000000000000, 10000000000000]
         return [LetsGo/(LetsGo+Shucks), LetsGo+Shucks]
 
 
@@ -239,7 +239,10 @@ class OU_predictor():
             tempLst = []
             avgBets = []
             for y in range(20):
-                tempLst.append(self.set_up_custom('custom_1', ratThresh = rat)[0])
+                print()
+                result = (self.set_up_custom('custom_1', ratThresh = rat)[0])
+                print(result)
+                tempLst.append(result)
                 avgBets.append(self.set_up_custom('custom_1', ratThresh = rat)[1])
             dict[round(rat, 2)] = [round(mean(tempLst), 2), round(mean(avgBets), 2)]
             rat = rat + 0.1
