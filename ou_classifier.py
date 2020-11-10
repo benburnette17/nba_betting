@@ -131,7 +131,38 @@ class OU_predictor():
         return OU_classifications
 
 
-    def set_up_custom(self, model_type, distThresh = 0.75, ratThresh = 0.7):
+    def getNN_hybrid(self, points, distThresh, subThresh): #takes in a set of points. Gets the nearest neighbors for each point, and the classifies based on those neighbors and a threshold.
+                            #returns a dictionary of where the keys are indices of the points, and the values are the classification for those points.
+        OU_classifications = {}
+        distances, indices = self.model.kneighbors(points)
+        for i in range(len(indices)):
+            LST = [distances[i], indices[i]]
+            #goes through each game in test data
+            o_count = 0
+            u_count = 0
+            for x in range(len(LST[0])):
+                #for each game in test data, goes through its K (10) nearest neighbors
+                neighbor = LST[1][x]
+                #gives you neighbor game index
+                distance = LST[0][x]
+                #gives you neighbor distance
+                if self.y_train[neighbor] == "O" and distance < distThresh:
+                    o_count += 1
+                    # print("o hit\n")
+                elif self.y_train[neighbor] == "U" and distance < distThresh:
+                    u_count += 1
+                    # print("u hit\n")
+
+            tot = o_count + u_count
+            if o_count - u_count > subThresh:
+                OU_classifications[i] = "O"
+            elif u_count - o_count > subThresh:
+                OU_classifications[i] = "U"
+            else:
+                OU_classifications[i] = "?"
+        return OU_classifications
+
+    def set_up_custom(self, model_type, distThresh = 0.75, ratThresh = 0.7, subThresh = 2):
         self.get_split()
         self.model = NearestNeighbors(n_neighbors=self.num_neighbors, algorithm="ball_tree").fit(self.X_train)
         if model_type == 'custom_1':
@@ -139,6 +170,8 @@ class OU_predictor():
             self.answer_dict = self. getNN(self.X_test)
         elif model_type == 'custom_2':
             self.answer_dict = self. getNN_dist(self.X_test, distThresh)
+        elif model_type == 'custom_3':
+            self.answer_dict = self.getNN_hybrid(self.X_test, distThresh, subThresh)
         # print(self.answer_dict)
         LetsGo = 0
         Shucks = 0
@@ -152,7 +185,7 @@ class OU_predictor():
                 Shucks += 1
         if LetsGo+Shucks == 0:
             return 100000000000000000
-        return LetsGo/(LetsGo+Shucks)
+        return [LetsGo/(LetsGo+Shucks), LetsGo+Shucks]
 
 
 
@@ -183,7 +216,7 @@ class OU_predictor():
     def testRatio(self, trials = 1000, model_type = 'custom_1'):
         lst = []
         for x in range(trials):
-            lst.append(self.set_up_custom(model_type))
+            lst.append(self.set_up_custom(model_type)[0])
         return mean(lst)
 
     def testExplore_dist(self, trials = 10):
@@ -191,9 +224,11 @@ class OU_predictor():
         dist = 1.2
         for x in range(trials):
             tempLst = []
+            avgBets = []
             for y in range(25):
-                tempLst.append(self.set_up_custom('custom_2', distThresh = dist))
-            dict[round(dist, 2)] = round(mean(tempLst), 2)
+                tempLst.append(self.set_up_custom('custom_2', distThresh = dist)[0])
+                avgBets.append(self.set_up_custom('custom_2', distThresh = dist)[1])
+            dict[round(dist, 2)] = [round(mean(tempLst), 2), round(mean(avgBets), 2)]
             dist = dist - 0.1
         return dict
 
@@ -202,8 +237,10 @@ class OU_predictor():
         rat = 0.5
         for x in range(trials):
             tempLst = []
+            avgBets = []
             for y in range(20):
-                tempLst.append(self.set_up_custom('custom_1', ratThresh = rat))
-            dict[round(rat, 2)] = round(mean(tempLst), 2)
+                tempLst.append(self.set_up_custom('custom_1', ratThresh = rat)[0])
+                avgBets.append(self.set_up_custom('custom_1', ratThresh = rat)[1])
+            dict[round(rat, 2)] = [round(mean(tempLst), 2), round(mean(avgBets), 2)]
             rat = rat + 0.1
         return dict
