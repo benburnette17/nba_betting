@@ -61,6 +61,18 @@ class OU_predictor():
                          'OTOV_V', 'OPTS_V', 'FG%_H', '3P%_H', 'FT%_H',
                          'FTA_H', 'ORB_H', 'TRB_H', 'AST_H', 'STL_H', 'BLK_H', 'TOV_H', 'PTS_H',
                          'OFG%_H', 'O3P%_H', 'OORB_H', 'OTRB_H', 'OTOV_H', 'OPTS_H']].copy()
+        
+        # features = self.game_team_data[['OverUnder', 'FG%_V', '3P%_V', 'FT%_V', 'FTA_V', 'ORB_V',
+        #                  'TRB_V', 'AST_V', 'BLK_V', 'TOV_V', 'PTS_V', 'OFG%_V',
+        #                  'O3P%_V', 'OORB_V', 'OTRB_V',
+        #                  'OTOV_V', 'OPTS_V', 'FG%_H', '3P%_H', 'FT%_H',
+        #                  'FTA_H', 'ORB_H', 'TRB_H', 'AST_H', 'BLK_H', 'TOV_H', 'PTS_H',
+        #                  'OFG%_H', 'O3P%_H', 'OORB_H', 'OTRB_H', 'OTOV_H', 'OPTS_H']].copy()
+        # features['OverUnder'] = (features['OverUnder']*10)
+        # features['OPTS_V'] = (features['OPTS_V']*2)
+        # features['OPTS_H'] = (features['OPTS_H']*2)
+
+        
         labels = self.game_team_data['OUresult']
         self.X_train,self.X_test, self.y_train, self.y_test = train_test_split(features, labels, test_size=0.10)
         self.X_train.reset_index(drop=True, inplace=True) #need to reset the indexes for consistent referencing
@@ -95,6 +107,33 @@ class OU_predictor():
                 OU_classifications[i] = "U"
             else:
                 OU_classifications[i] = "?"
+
+        return OU_classifications
+    
+    def getNN_sim(self, points): #takes in a set of points. Gets the nearest neighbors for each point, and the classifies based on those neighbors and a threshold.
+                            #returns a dictionary of where the keys are indices of the points, and the values are the classification for those points.
+        OU_classifications = {}
+        # print(self.model.kneighbors(points))
+        distances, indices = self.model.kneighbors(points)
+        # print(distances)
+        for i in range(len(indices)):
+            #goes through each game in test data
+            o_count = 0
+            u_count = 0
+            for neighbor in indices[i]:
+                #for each game in test data, goes through its K (10) nearest neighbors
+                if self.y_train[neighbor] == "O":
+                    o_count += 1
+                else:
+                    u_count += 1
+
+            tot = o_count + u_count
+            if o_count > u_count:
+                OU_classifications[i] = ["O", o_count/tot]
+            elif u_count > o_count:
+                OU_classifications[i] = ["U", u_count/tot]
+            else:
+                OU_classifications[i] = ["?", 0]
 
         return OU_classifications
 
@@ -172,6 +211,9 @@ class OU_predictor():
             self.answer_dict = self. getNN_dist(self.X_test, distThresh)
         elif model_type == 'custom_3':
             self.answer_dict = self.getNN_hybrid(self.X_test, distThresh, subThresh)
+        elif model_type == 'custom_sim':
+            self.answer_dict = self.getNN_sim(self.X_test)
+            return self.answer_dict
         # print(self.answer_dict)
         LetsGo = 0
         Shucks = 0
@@ -232,7 +274,7 @@ class OU_predictor():
             dist = dist - 0.1
         return dict
 
-    def testExplore_rat(self, trials = 5):
+    def testExplore_rat(self, trials = 10):
         dict = {}
         rat = 0.5
         for x in range(trials):
@@ -245,5 +287,25 @@ class OU_predictor():
                 tempLst.append(result)
                 avgBets.append(self.set_up_custom('custom_1', ratThresh = rat)[1])
             dict[round(rat, 2)] = [round(mean(tempLst), 2), round(mean(avgBets), 2)]
-            rat = rat + 0.1
+            rat = rat + 0.05
         return dict
+
+    
+    def simDict(self):
+        #returns in form of [prediction, ratio, outcome]
+        newDict = {}
+        OU_classifications = self.set_up_custom(model_type='custom_sim')
+        print(OU_classifications)
+        for key in OU_classifications:
+            actual = self.y_test[key]
+            lst = OU_classifications[key]
+            lst.append(actual)
+            newDict[key] = lst
+        return newDict
+    
+    # def simOne(self):
+
+
+
+
+
