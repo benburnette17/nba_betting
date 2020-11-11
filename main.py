@@ -4,13 +4,141 @@
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+import gambling
+import ou_classifier
 
 
-# Press the green button in the gutter to run the script.
+def bet_ben(amount = 1000, odds = 48.5/50):
+
+
+    d = ou_classifier.OU_predictor(model_type="custom", model_param=10)
+    data = d.simDict()
+    starting = amount
+    current = amount
+
+    for i in range(len(data)):
+        game_info = data[i]
+        profit = current - starting
+        if profit > 0:
+            bet = 75 + .4 * profit
+        elif current < 75:
+            bet = current
+        else:
+            bet = 75
+        if game_info[1] > .7 and game_info[0] == game_info[2]:
+            current += bet * odds
+        elif game_info[1] > .7 and game_info[0] != game_info[2]:
+            current -= bet
+        else:
+            continue
+        if current <= 0:
+            #print("Welp, you lost all your money. Don't gamble kids.")
+            return 0
+
+    #print("Ben's amount of money at the end is: ", current)
+    return current
+
+def bet_eli(amount = 1000, odds = 48.5/50):
+
+
+    d = ou_classifier.OU_predictor(model_type="custom", model_param=10)
+    data = d.simDict()
+    current = amount
+
+    for i in range(len(data)):
+        game_info = data[i]
+        bet = 20
+        if game_info[1] > .8 and game_info[0] == game_info[2]:
+            current += bet * odds
+        elif game_info[1] > .8 and game_info[0] != game_info[2]:
+            current -= bet
+        else:
+            continue
+        if current <= 0:
+            #print("Welp, you lost all your money. Don't gamble kids.")
+            return 0
+
+    #print("Eli's amount of money at the end is: ", current)
+    return current
+
+def bet_daniel(amount = 1000, odds = 48.5/50):
+
+
+    d = ou_classifier.OU_predictor(model_type="custom", model_param=10)
+    data = d.simDict()
+    current = amount
+
+    for i in range(len(data)):
+        game_info = data[i]
+        bet = 100
+        if game_info[1] > .8 and game_info[0] == game_info[2]:
+            current += bet * odds
+        elif game_info[1] > .8 and game_info[0] != game_info[2]:
+            current -= bet
+        else:
+            continue
+        if current <= 0:
+            #print("Welp, you lost all your money. Don't gamble kids.")
+            return 0
+
+    #print("Daniel's amount of money at the end is: ", current)
+    return current
+
+def simulate_bets():
+    print("Running simulation for Ben")
+    ben_max = float("-inf")
+    ben_min = float("inf")
+    ben_mean = 0
+    for i in range(100):
+        simulation = bet_ben()
+        if simulation > ben_max:
+            ben_max = simulation
+        if simulation < ben_min:
+            ben_min = simulation
+        ben_mean += simulation
+    ben_mean /= 100
+    print("Ben's max: ", ben_max)
+    print("Ben's min: ", ben_min)
+    print("Ben's avg: ", ben_mean)
+
+    print()
+
+    print("Running simulation for Eli")
+    eli_max = float("-inf")
+    eli_min = float("inf")
+    eli_mean = 0
+    for i in range(100):
+        simulation = bet_eli()
+        if simulation > eli_max:
+            eli_max = simulation
+        if simulation < eli_min:
+            eli_min = simulation
+        eli_mean += simulation
+    eli_mean /= 100
+    print("Eli's max: ", eli_max)
+    print("Eli's min: ", eli_min)
+    print("Eli's avg: ", eli_mean)
+
+    print()
+
+    print("Running simulation for Daniel")
+    dan_max = float("-inf")
+    dan_min = float("inf")
+    dan_mean = 0
+    for i in range(100):
+        simulation = bet_daniel()
+        if simulation > dan_max:
+            dan_max = simulation
+        if simulation < dan_min:
+            dan_min = simulation
+        dan_mean += simulation
+    dan_mean /= 100
+    print("Daniel's max: ", dan_max)
+    print("Daneil's min: ", dan_min)
+    print("Daniel's avg: ", dan_mean)
+
+
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    simulate_bets()

@@ -59,7 +59,7 @@ def read_odds(odds_file="nba_odds_2018-19.xlsx"):
     MasterTable['OUresult'] = MasterTable.apply(lambda row: OUresult(row), axis=1)
     MasterTable = MasterTable.rename({'Date_x': 'Date', 'Final_x': 'Final_Visitor', 'Final_y': 'Final_Home', 'Team_x':'Visitor', 'Team_y':'Home'}, axis=1)  # new method
     MasterTable = MasterTable[['game_number', 'Date', 'Visitor', 'Final_Visitor', 'Home', 'Final_Home', 'OverUnder', 'OUresult']]
-    MasterTable.to_excel("output.xlsx")
+    #MasterTable.to_excel("output.xlsx")
     # print(MasterTable.head(25))
     return MasterTable
     #return MasterTable
@@ -159,7 +159,7 @@ data19 = merge_normalize_Stats_Odds(odds19, stats19)
 def concatYears(data1, data2, data3):
     con1 = pd.concat([data1, data2])
     con2 = pd.concat([con1, data3])
-    con2.to_excel("output.xlsx")
+    #con2.to_excel("output.xlsx")
     return con2
 
 #print(trainTest(concatYears(data17, data18, data19)))

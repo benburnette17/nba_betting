@@ -295,7 +295,7 @@ class OU_predictor():
         #returns in form of [prediction, ratio, outcome]
         newDict = {}
         OU_classifications = self.set_up_custom(model_type='custom_sim')
-        print(OU_classifications)
+        #print(OU_classifications)
         for key in OU_classifications:
             actual = self.y_test[key]
             lst = OU_classifications[key]
