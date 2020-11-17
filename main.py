@@ -89,6 +89,7 @@ def simulate_bets():
     ben_max = float("-inf")
     ben_min = float("inf")
     ben_mean = 0
+    ben_array = []
     for i in range(100):
         simulation = bet_ben()
         if simulation > ben_max:
@@ -96,10 +97,14 @@ def simulate_bets():
         if simulation < ben_min:
             ben_min = simulation
         ben_mean += simulation
+        ben_array.append(simulation)
     ben_mean /= 100
+    ben_array.sort()
+
     print("Ben's max: ", ben_max)
     print("Ben's min: ", ben_min)
     print("Ben's avg: ", ben_mean)
+    print("Ben's median: ", ben_array[50])
 
     print()
 
@@ -107,6 +112,7 @@ def simulate_bets():
     eli_max = float("-inf")
     eli_min = float("inf")
     eli_mean = 0
+    eli_array = []
     for i in range(100):
         simulation = bet_eli()
         if simulation > eli_max:
@@ -114,10 +120,14 @@ def simulate_bets():
         if simulation < eli_min:
             eli_min = simulation
         eli_mean += simulation
+        eli_array.append(simulation)
     eli_mean /= 100
+    eli_array.sort()
     print("Eli's max: ", eli_max)
     print("Eli's min: ", eli_min)
     print("Eli's avg: ", eli_mean)
+    print("Eli's median: ", eli_array[50])
+
 
     print()
 
@@ -125,6 +135,7 @@ def simulate_bets():
     dan_max = float("-inf")
     dan_min = float("inf")
     dan_mean = 0
+    dan_array = []
     for i in range(100):
         simulation = bet_daniel()
         if simulation > dan_max:
@@ -132,11 +143,14 @@ def simulate_bets():
         if simulation < dan_min:
             dan_min = simulation
         dan_mean += simulation
+        dan_array.append(simulation)
     dan_mean /= 100
+    dan_array.sort()
+
     print("Daniel's max: ", dan_max)
     print("Daneil's min: ", dan_min)
     print("Daniel's avg: ", dan_mean)
-
+    print("Daniel's median: ", dan_array[50])
 
 
 
